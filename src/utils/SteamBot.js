@@ -7,27 +7,35 @@ import winston from 'winston'
 
 export default class SteamBot {
   constructor (username, password, twoFactorAuthentication) {
+    winston.info('Creating bot %s', username)
+    winston.info('Login options are')
     let logInOptions = {
-      accountName: username,
-      password: password,
-      twoFactorCode: SteamTotp.generateAuthCode(twoFactorAuthentication)
+      'accountName': username,
+      'password': password,
+      'twoFactorCode': SteamTotp.generateAuthCode(twoFactorAuthentication)
     }
+    winston.info(logInOptions)
 
-    this.client = SteamUser(logInOptions)
+    this.client = new SteamUser()
 
-    this.handleBotLogin()
+    this.client.logOn(logInOptions)
 
-    this.community = SteamCommunity()
-    this.tradeManager = TradeOfferManager({
+    this.client.on('error', (err) => {
+      winston.error(err)
+    })
+
+    this.client.on('loggedOn', this.handleBotLogin.bind(this))
+
+    this.community = new SteamCommunity()
+    this.tradeManager = new TradeOfferManager({
       client: this.client,
       community: this.community,
       language: 'en'
     })
 
-    this.handleBotWebSession(twoFactorAuthentication)
-    this.handleFriendRequests()
+    this.client.on('webSession', this.handleBotWebSession.bind(this))
 
-    this.tradeManager.on('newOffer', this.handleKeyOffer)
+    this.tradeManager.on('newOffer', this.handleKeyOffer.bind(this))
   }
 
   handleKeyOffer (offer) {
@@ -43,19 +51,15 @@ export default class SteamBot {
   }
 
   handleBotLogin () {
-    this.client.on('loggedOn', () => {
-      winston.info('Bot %s is logged in', username)
-      this.client.setPersona(SteamUser.Steam.EPersonaState.Online)
-    })
+    winston.info('Bot is logged in')
+    this.client.setPersona(SteamUser.Steam.EPersonaState.Away)
+    this.client.gamesPlayed(440)
   }
 
-  handleBotWebSession (twoFactorAuthentication) {
-    this.client.on('webSession', (sessionId, cookies) => {
-      this.community.setCookies(cookies)
-      this.community.startConfirmationChecker(10000, twoFactorAuthentication)
-      winston.info('Session %s successfully established', sessionId)
-      this.tradeManager.setCookies(cookies)
-    })
+  handleBotWebSession (sessionId, cookies) {
+    this.community.setCookies(cookies)
+    winston.info('Session %s successfully established', sessionId)
+    this.tradeManager.setCookies(cookies)
   }
 
   handleFriendRequests () {
