@@ -8,21 +8,15 @@ import winston from 'winston'
 export default class SteamBot {
   constructor (username, password, twoFactorAuthentication) {
     winston.info('Creating bot %s', username)
-    winston.info('Login options are')
     let logInOptions = {
       'accountName': username,
       'password': password,
       'twoFactorCode': SteamTotp.generateAuthCode(twoFactorAuthentication)
     }
-    winston.info(logInOptions)
 
     this.client = new SteamUser()
 
     this.client.logOn(logInOptions)
-
-    this.client.on('error', (err) => {
-      winston.error(err)
-    })
 
     this.client.on('loggedOn', this.handleBotLogin.bind(this))
 
