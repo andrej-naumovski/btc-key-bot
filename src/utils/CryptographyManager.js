@@ -8,7 +8,7 @@ export default class CryptographyManager {
   constructor () {
   }
 
-  encrypt(text) {
+  encrypt (text) {
     let iv = crypto.randomBytes(IV_LENGTH)
     let cipher = crypto.createCipheriv('aes-256-cbc', new Buffer(ENCRYPTION_KEY), iv)
     let encryptedText = cipher.update(text)
@@ -18,7 +18,7 @@ export default class CryptographyManager {
     return iv.toString('hex') + ':' + encryptedText.toString('hex')
   }
 
-  decrypt(encryptedText) {
+  decrypt (encryptedText) {
     let pieces = encryptedText.split(':')
     let iv = new Buffer(pieces.shift(), 'hex')
     let text = new Buffer(pieces.join(':'), 'hex')

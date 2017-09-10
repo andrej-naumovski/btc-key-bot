@@ -4,9 +4,8 @@ import SteamCommunity from 'steamcommunity'
 import TradeOfferManager from 'steam-tradeoffer-manager'
 import winston from 'winston'
 
-
 export default class SteamBot {
-  constructor (username, password, twoFactorAuthentication) {
+  constructor (username, password, twoFactorAuthentication, successCallback, errorCallback) {
     winston.info('Creating bot %s', username)
     this.twoFactorAuthentication = twoFactorAuthentication
     let logInOptions = {
@@ -15,33 +14,49 @@ export default class SteamBot {
       'twoFactorCode': SteamTotp.generateAuthCode(twoFactorAuthentication)
     }
 
-    this.username = username
-    this.client = new SteamUser()
+    this._username = username
+    this._client = new SteamUser()
 
-    this.client.logOn(logInOptions)
+    this._client.logOn(logInOptions)
 
-    this.client.on('loggedOn', this.handleBotLogin.bind(this))
+    this._client.on('loggedOn', (details) => {
+      this.handleBotLogin()
+      successCallback()
+    })
+    this._client.on('error', (error) => {
+      errorCallback(error)
+    })
 
-    this.community = new SteamCommunity()
-    this.tradeManager = new TradeOfferManager({
-      'client': this.client,
-      'community': this.community,
+    this._community = new SteamCommunity()
+    this._tradeManager = new TradeOfferManager({
+      'client': this._client,
+      'community': this._community,
       'language': 'en'
     })
 
-    this.client.on('webSession', this.handleBotWebSession.bind(this))
-    this.client.on('friendRelationship', this.handleFriendRequests.bind(this))
+    this._client.on('webSession', this.handleBotWebSession.bind(this))
+    this._client.on('friendRelationship', this.handleFriendRequests.bind(this))
 
-    this.tradeManager.on('newOffer', this.handleKeyOffer.bind(this))
+    this._tradeManager.on('newOffer', this.handleKeyOffer.bind(this))
   }
 
+  /*
+    Getters
+   */
+  get username () {
+    return this._username
+  }
+
+  get client () {
+    return this._client
+  }
 
   /*
     Used as callback on received trade offer. Handles offer, checks for offer items validity and transfers BTC to user.
     @param offer - The trade offer, as an object of the TradeOffer class
    */
   handleKeyOffer (offer) {
-    this.client.setPersona(SteamUser.Steam.EPersonaState.Busy)
+    this._client.setPersona(SteamUser.Steam.EPersonaState.Busy)
     if (offer.itemsToGive.length !== 0 || offer.itemsToReceive.length === 0) {
       offer.decline((err) => {
         winston.error(err.message)
@@ -49,7 +64,7 @@ export default class SteamBot {
       return
     }
     winston.info(offer.partner.getSteamID64())
-    for(let i = 0; i < offer.itemsToReceive.length; i++) {
+    for (let i = 0; i < offer.itemsToReceive.length; i++) {
       winston.info(offer.itemsToReceive[i].market_hash_name)
     }
     //TODO: Finish key offers with checks, price calculation and BTC transfer
@@ -61,7 +76,7 @@ export default class SteamBot {
    */
   handleBotLogin () {
     winston.info('Bot is logged in')
-    this.client.setPersona(SteamUser.Steam.EPersonaState.Online)
+    this._client.setPersona(SteamUser.Steam.EPersonaState.Online)
   }
 
   /*
@@ -72,10 +87,10 @@ export default class SteamBot {
     @param cookies - The browser cookies of the session
    */
   handleBotWebSession (sessionId, cookies) {
-    this.community.setCookies(cookies)
+    this._community.setCookies(cookies)
     winston.info('Session %s successfully established', sessionId)
-    this.tradeManager.setCookies(cookies)
-    this.community.startConfirmationChecker(10000, this.twoFactorAuthentication)
+    this._tradeManager.setCookies(cookies)
+    this._community.startConfirmationChecker(10000, this.twoFactorAuthentication)
   }
 
   /*
@@ -87,10 +102,18 @@ export default class SteamBot {
    */
   handleFriendRequests (steamId, relationship) {
     if (relationship === SteamUser.Steam.EFriendRelationship.RequestRecipient) {
-      this.client.addFriend(steamid)
+      this._client.addFriend(steamid)
       winston.info('Accepted friend request from SteamID %s', steamId)
-      this.client.chatMessage(steamid, `Hello, this is the BTC key bot. Please insert a command to continue
+      this._client.chatMessage(steamid, `Hello, this is the BTC key bot. Please insert a command to continue
         or type !help for a list of available commands`)
     }
+  }
+
+  /*
+    Logs the SteamUser client off.
+   */
+
+  logOff () {
+    this._client.logOff()
   }
 }

@@ -16,5 +16,11 @@ let BotSchema = new Schema({
   }
 })
 
+BotSchema.methods.toJSON = function() {
+  let obj = this.toObject()
+  delete obj.password
+  return obj
+}
+
 export default mongoose.model('Bot', BotSchema)
 
