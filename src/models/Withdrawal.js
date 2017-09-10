@@ -10,4 +10,3 @@ let WithdrawalSchema = new Schema({
 })
 
 export default mongoose.model('Withdrawal', WithdrawalSchema)
-

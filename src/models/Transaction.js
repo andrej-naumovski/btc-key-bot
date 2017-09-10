@@ -8,7 +8,7 @@ let TransactionSchema = new Schema({
     default: Date.now
   },
   transactionType: {
-    type: String
+    type: String,
     enum: ['SELL', 'BUY']
   }
 })
