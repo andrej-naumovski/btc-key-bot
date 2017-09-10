@@ -53,7 +53,7 @@ export default class BotService {
       }
       for(let i = 0; i < this.botQueue.length; i++) {
         if(this.botQueue[i].username === username) {
-          this.botQueue[i].logOff()
+          this.botQueue[i].client.logOff()
           this.botQueue.splice(i, 1)
         }
       }
