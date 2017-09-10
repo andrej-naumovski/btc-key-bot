@@ -2,8 +2,8 @@ import SteamUser from 'steam-user'
 import SteamTotp from 'steam-totp'
 import SteamCommunity from 'steamcommunity'
 import TradeOfferManager from 'steam-tradeoffer-manager'
-
 import winston from 'winston'
+
 
 export default class SteamBot {
   constructor (username, password, twoFactorAuthentication) {
