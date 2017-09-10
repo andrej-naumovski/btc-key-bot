@@ -15,6 +15,7 @@ export default class SteamBot {
       'twoFactorCode': SteamTotp.generateAuthCode(twoFactorAuthentication)
     }
 
+    this.username = username
     this.client = new SteamUser()
 
     this.client.logOn(logInOptions)
