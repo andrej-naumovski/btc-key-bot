@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/server.js --exec babel-node",
+    "start": "ENCRYPTION_KEY='QJbXGc2ckmRWx3K9WNRQT2jnt8xkjdwM' nodemon src/server.js --exec babel-node",
     "build": "cd client && npm install && npm run build && cd ../ && babel src -d dist && mkdir dist/client && cp -R client/build dist/client/",
     "serve": "npm run build && node dist/server.js",
     "clean": "rm -rf dist",
