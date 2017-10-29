@@ -1,4 +1,4 @@
-# BTC Key bot
+# BTC Key bot (incomplete)
 
 ## A complete MERN stack application for trading Bitcoin to CSGO keys and reverse.
 
